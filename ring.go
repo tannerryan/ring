@@ -25,7 +25,7 @@ type Ring struct {
 // elements, it accurately states if data is not added. Within a falsePositive
 // rate, it will indicate if the data has been added. When bufferSize is greater
 // than zero, ring will test against the last bufferSize elements.
-func Init(elements uint64, falsePositive float64, bufferSize int) (*Ring, error) {
+func Init(elements int, falsePositive float64, bufferSize int) (*Ring, error) {
 	r := Ring{}
 	// length of filter
 	m := (-1 * float64(elements) * math.Log(falsePositive)) / math.Pow(math.Log(2), 2)
