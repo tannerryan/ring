@@ -11,9 +11,8 @@ import (
 )
 
 func main() {
-	// Support up to 100 elements with less than 1% false positives, no circular
-	// buffer
-	r, err := ring.Init(100, 0.01, 0)
+	// Support up to 100 elements with less than 1% false positives
+	r, err := ring.Init(100, 0.01)
 	if err != nil {
 		// error will only occur if parameters are set incorrectly
 		panic(err)
