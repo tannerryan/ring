@@ -3,8 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package ring provides a high performance and thread safe bloom filter, with an
-optional circular buffer to avoid short term false positives.
+Package ring provides a high performance and thread safe bloom filter.
 
 License
 

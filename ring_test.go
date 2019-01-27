@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/thetannerryan/ring"
@@ -20,14 +19,10 @@ const (
 )
 
 var (
-	// main testing (no circular buffer)
-	r1, _ = ring.Init(tests, fpRate, 0)
-	// main testing (circular buffer)
-	r2, _ = ring.Init(tests, fpRate, tests)
-	// benchmark (no circular buffer)
-	rBench1, _ = ring.Init(tests, fpRate, 0)
-	// benchmark (circular buffer)
-	rBench2, _ = ring.Init(tests, fpRate, tests)
+	// main testing
+	r, _ = ring.Init(tests, fpRate)
+	// benchmark
+	rBench, _ = ring.Init(tests, fpRate)
 	// error count
 	errorCount = 0
 )
@@ -41,18 +36,16 @@ func TestMain(m *testing.M) {
 	fmt.Printf(">> Number of elements:  %d\n", tests)
 	fmt.Printf(">> Target false positive rate:  %f\n", fpRate)
 	fmt.Printf(">> Number of false positives:  %d\n", errorCount)
-	fmt.Printf(">> Actual false positive rate:  %f\n", float64(errorCount)/float64(tests))
+	fmt.Printf(">> Actual false positive rate:  %f\n", float64(errorCount)/tests)
 
 	// benchmarks
-	fmt.Printf(">> Benchmark Add() (no buffer):  %s\n", testing.Benchmark(BenchmarkNoBufferAdd))
-	fmt.Printf(">> Benchmark Test() (no buffer):  %s\n", testing.Benchmark(BenchmarkNoBufferTest))
-	fmt.Printf(">> Benchmark Add() (buffered):  %s\n", testing.Benchmark(BenchmarkBufferAdd))
-	fmt.Printf(">> Benchmark Test() (buffered):  %s\n", testing.Benchmark(BenchmarkBufferTest))
+	fmt.Printf(">> Benchmark Add():  %s\n", testing.Benchmark(BenchmarkAdd))
+	fmt.Printf(">> Benchmark Test():  %s\n", testing.Benchmark(BenchmarkTest))
 
 	// actual failure if actual exceeds desired false positive rate
 	if ret != 0 {
 		os.Exit(ret)
-	} else if float64(errorCount)/float64(tests) > fpRate {
+	} else if float64(errorCount)/tests > fpRate {
 		fmt.Printf("False positive threshold exceeded !!\n")
 		os.Exit(1)
 	} else {
@@ -60,78 +53,54 @@ func TestMain(m *testing.M) {
 	}
 }
 
-// BenchmarkNoBufferAdd tests adding elements to a Ring with no buffer.
-func BenchmarkNoBufferAdd(b *testing.B) {
+// BenchmarkAdd tests adding elements to a Ring.
+func BenchmarkAdd(b *testing.B) {
 	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
 		intToByte(buff, i)
-		rBench1.Add(buff)
+		rBench.Add(buff)
 	}
 }
 
-// BenchmarkNoBufferTest tests elements in a Ring with no buffer.
-func BenchmarkNoBufferTest(b *testing.B) {
+// BenchmarkTest tests elements in a Ring.
+func BenchmarkTest(b *testing.B) {
 	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
 		intToByte(buff, i)
-		rBench1.Test(buff)
-	}
-}
-
-// BenchmarkBufferAdd tests adding elements to a Ring with a buffer.
-func BenchmarkBufferAdd(b *testing.B) {
-	buff := make([]byte, 4)
-	for i := 0; i < b.N; i++ {
-		intToByte(buff, i)
-		rBench2.Add(buff)
-	}
-}
-
-// BenchmarkBufferTest tests elements in a Ring with a buffer.
-func BenchmarkBufferTest(b *testing.B) {
-	buff := make([]byte, 4)
-	for i := 0; i < b.N; i++ {
-		intToByte(buff, i)
-		rBench2.Test(buff)
+		rBench.Test(buff)
 	}
 }
 
 // TestBadParameters ensures that errornous parameters return an error.
 func TestBadParameters(t *testing.T) {
-	_, err := ring.Init(100, 1, 0)
+	_, err := ring.Init(100, 1)
 	if err == nil {
 		t.Error("invalid parameters not captured")
 	}
-	_, err = ring.Init(0, 0.05, 0)
+	_, err = ring.Init(0, 0.05)
 	if err == nil {
 		t.Error("invalid parameters not captured")
 	}
-	_, err = ring.Init(0, 0.1, 0)
+	_, err = ring.Init(0, 0.1)
 	if err == nil {
 		t.Error("invalid parameters not captured")
 	}
 }
 
-// TestReset ensures the filter and buffer are properly cleared on Reset().
+// TestReset ensures the Ring is cleared on Reset().
 func TestReset(t *testing.T) {
-	r1.Reset()
-	r2.Reset()
+	buff := make([]byte, 4)
 
 	for i := 0; i < tests; i++ {
-		r1.Add([]byte(strconv.Itoa(i)))
-		r2.Add([]byte(strconv.Itoa(i)))
+		intToByte(buff, i)
+		r.Add(buff)
 	}
 
-	r1.Reset()
-	r2.Reset()
-
 	// ensure all data was removed
+	r.Reset()
 	for i := 0; i < tests; i++ {
-		if r1.Test([]byte(strconv.Itoa(i))) {
-			fmt.Printf("Data not removed !!\n")
-			os.Exit(1)
-		}
-		if r2.Test([]byte(strconv.Itoa(i))) {
+		intToByte(buff, i)
+		if r.Test(buff) {
 			fmt.Printf("Data not removed !!\n")
 			os.Exit(1)
 		}
@@ -150,43 +119,14 @@ func TestData(t *testing.T) {
 		rand.Read(token)
 
 		// test before adding
-		if r1.Test(token) {
+		if r.Test(token) {
 			errorCount++
 		}
-		r1.Add(token)
+		r.Add(token)
 		// test after adding
-		if !r1.Test(token) {
+		if !r.Test(token) {
 			errorCount++
 		}
-	}
-}
-
-// TestBuffer performs unit tests on the Ring with a buffer.
-func TestBuffer(t *testing.T) {
-	var token []byte
-	bufferErrorCount := 0
-	// byte range of random data
-	min, max := 8, 4096
-	for i := 0; i < tests; i++ {
-		// generate random data
-		size := rand.Intn(max-min) + min
-		token = make([]byte, size)
-		rand.Read(token)
-
-		// test before adding
-		if r2.Test(token) {
-			bufferErrorCount++
-		}
-		r2.Add(token)
-		// test after adding
-		if !r2.Test(token) {
-			bufferErrorCount++
-		}
-	}
-
-	if bufferErrorCount > 0 {
-		fmt.Printf("Buffer lost data !!\n")
-		os.Exit(1)
 	}
 }
 
