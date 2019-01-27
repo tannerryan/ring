@@ -8,6 +8,8 @@ const (
 	// 128-bit MurmurHash3 constants
 	murmur64c1 uint64 = 0x87c37b91114253d5
 	murmur64c2 uint64 = 0x4cf5ad432745937f
+	// single byte
+	single byte = byte(1)
 )
 
 // murmur128 returns two 64-bit outputs of a 128-bit MurmurHash3 hash.
@@ -114,6 +116,7 @@ func murmur128(data []byte) (uint64, uint64) {
 // bytesToUint64 performs little endian conversion from a byte array to an
 // unsigned 64-bit int.
 func bytesToUint64(b []byte) uint64 {
+	_ = b[7] // safety
 	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
 		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
 }
@@ -121,7 +124,7 @@ func bytesToUint64(b []byte) uint64 {
 // generateMultihash returns 4 64-bit (2 x 128-bit) MurmurHash3 hashes.
 func generateMultiHash(data []byte) [4]uint64 {
 	h1, h2 := murmur128(data)
-	h3, h4 := murmur128(append(data, byte(1)))
+	h3, h4 := murmur128(append(data, single))
 	return [4]uint64{h1, h2, h3, h4}
 }
 

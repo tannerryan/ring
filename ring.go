@@ -12,9 +12,9 @@ import (
 
 // Ring contains the information for a ring data store.
 type Ring struct {
-	size       int           // size of bit array
+	size       uint64        // size of bit array
 	bits       []byte        // main bit array
-	hash       int           // number of hash rounds
+	hash       uint64        // number of hash rounds
 	bufferSize int           // size of circular data array
 	bufferPtr  int           // pointer to last added data point
 	buffer     []uint64      // circular data array
@@ -25,7 +25,7 @@ type Ring struct {
 // elements, it accurately states if data is not added. Within a falsePositive
 // rate, it will indicate if the data has been added. When bufferSize is greater
 // than zero, ring will test against the last bufferSize elements.
-func Init(elements int, falsePositive float64, bufferSize int) (*Ring, error) {
+func Init(elements uint64, falsePositive float64, bufferSize int) (*Ring, error) {
 	r := Ring{}
 	// length of filter
 	m := (-1 * float64(elements) * math.Log(falsePositive)) / math.Pow(math.Log(2), 2)
@@ -46,21 +46,22 @@ func Init(elements int, falsePositive float64, bufferSize int) (*Ring, error) {
 
 	// ring parameters
 	r.mutex = &sync.RWMutex{}
-	r.size = int(math.Ceil(m))
-	r.hash = int(math.Ceil(k))
+	r.size = uint64(math.Ceil(m))
+	r.hash = uint64(math.Ceil(k))
 	r.bits = make([]byte, r.size)
 	return &r, nil
 }
 
 // Add adds the data to the ring.
 func (r *Ring) Add(data []byte) {
+	// generate hashes
+	hash := generateMultiHash(data)
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	// generate hashes
-	hash := generateMultiHash(data)
-	for i := 0; i < r.hash; i++ {
-		index := getRound(hash, uint64(i)) % uint64(r.size)
+	for i := uint64(0); i < r.hash; i++ {
+		index := getRound(hash, i) % r.size
 		r.bits[index] = 1
 	}
 	// add to circular buffer if initialized
@@ -88,13 +89,14 @@ func (r *Ring) Reset() {
 // the data is in the buffer, while false indicates that the data is not in the
 // buffer.
 func (r *Ring) Test(data []byte) bool {
+	// generate hashes
+	hash := generateMultiHash(data)
+
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
-	// generate hashes
-	hash := generateMultiHash(data)
-	for i := 0; i < r.hash; i++ {
-		index := getRound(hash, uint64(i)) % uint64(r.size)
+	for i := uint64(0); i < uint64(r.hash); i++ {
+		index := getRound(hash, i) % r.size
 		if r.bits[index] != 1 {
 			return false
 		}

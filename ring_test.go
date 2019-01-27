@@ -62,29 +62,37 @@ func TestMain(m *testing.M) {
 
 // BenchmarkNoBufferAdd tests adding elements to a Ring with no buffer.
 func BenchmarkNoBufferAdd(b *testing.B) {
+	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
-		rBench1.Add([]byte(strconv.Itoa(i)))
+		intToByte(buff, i)
+		rBench1.Add(buff)
 	}
 }
 
 // BenchmarkNoBufferTest tests elements in a Ring with no buffer.
 func BenchmarkNoBufferTest(b *testing.B) {
+	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
-		rBench1.Test([]byte(strconv.Itoa(i)))
+		intToByte(buff, i)
+		rBench1.Test(buff)
 	}
 }
 
 // BenchmarkBufferAdd tests adding elements to a Ring with a buffer.
 func BenchmarkBufferAdd(b *testing.B) {
+	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
-		rBench2.Add([]byte(strconv.Itoa(i)))
+		intToByte(buff, i)
+		rBench2.Add(buff)
 	}
 }
 
 // BenchmarkBufferTest tests elements in a Ring with a buffer.
 func BenchmarkBufferTest(b *testing.B) {
+	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
-		rBench2.Test([]byte(strconv.Itoa(i)))
+		intToByte(buff, i)
+		rBench2.Test(buff)
 	}
 }
 
@@ -180,4 +188,13 @@ func TestBuffer(t *testing.T) {
 		fmt.Printf("Buffer lost data !!\n")
 		os.Exit(1)
 	}
+}
+
+// intToByte converts an int (32-bit max) to byte array.
+func intToByte(b []byte, v int) {
+	_ = b[3] // memory safety
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
 }

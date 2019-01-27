@@ -7,12 +7,13 @@ Card](https://goreportcard.com/badge/github.com/thetannerryan/ring)](https://gor
 [![GitHub
 license](https://img.shields.io/github/license/thetannerryan/ring.svg)](https://github.com/TheTannerRyan/ring/blob/master/LICENSE)
 
-Package ring provides a high performance Go implementation of a bloom filter,
-with an optional circular buffer, used for checking set membership.
+Package ring provides a high performance and thread safe Go implementation of a
+bloom filter, with an optional circular buffer to avoid short term false
+positives.
 
 ## Usage
 Please see the [godoc](https://godoc.org/github.com/TheTannerRyan/ring) for
-usage.
+usage. More information regaring performance and usage will be provided soon.
 
 ## Accuracy
 Running `make` will perform unit tests, comparing the target false positive rate
@@ -23,21 +24,21 @@ the target.
 === RUN   TestBadParameters
 --- PASS: TestBadParameters (0.00s)
 === RUN   TestReset
---- PASS: TestReset (1.13s)
+--- PASS: TestReset (1.09s)
 === RUN   TestData
---- PASS: TestData (10.74s)
+--- PASS: TestData (8.94s)
 === RUN   TestBuffer
---- PASS: TestBuffer (10.91s)
+--- PASS: TestBuffer (9.01s)
 PASS
 >> Number of elements:  1000000
 >> Target false positive rate:  0.001000
 >> Number of false positives:  110
 >> Actual false positive rate:  0.000110
->> Benchmark Add() (no buffer):   5000000              317 ns/op
->> Benchmark Test() (no buffer):   3000000             519 ns/op
->> Benchmark Add() (buffered):   5000000               316 ns/op
->> Benchmark Test() (buffered):      2000           829565 ns/op
-ok      command-line-arguments  30.499s
+>> Benchmark Add() (no buffer):   5000000              295 ns/op
+>> Benchmark Test() (no buffer):   3000000             451 ns/op
+>> Benchmark Add() (buffered):   5000000               296 ns/op
+>> Benchmark Test() (buffered):      2000           831634 ns/op
+ok      command-line-arguments  26.249s
 ```
 
 ## License
