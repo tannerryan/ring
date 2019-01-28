@@ -10,9 +10,14 @@ import (
 	"sync"
 )
 
+var (
+	errElements      = errors.New("error: elements must be greater than 0")
+	errFalsePositive = errors.New("error: falsePositive must be greater than 0 and less than 1")
+)
+
 // Ring contains the information for a ring data store.
 type Ring struct {
-	size  uint64        // size of bit (bit array is size/8+1)
+	size  uint64        // number of bits (bit array is size/8+1)
 	bits  []uint8       // main bit array
 	hash  uint64        // number of hash rounds
 	mutex *sync.RWMutex // mutex for locking Add, Test, and Reset operations
@@ -22,18 +27,19 @@ type Ring struct {
 // elements, it accurately states if data is not added. Within a falsePositive
 // rate, it will indicate if the data has been added.
 func Init(elements int, falsePositive float64) (*Ring, error) {
-	r := Ring{}
-	// length of filter
-	m := (-1 * float64(elements) * math.Log(falsePositive)) / math.Pow(math.Log(2), 2)
-	// number of hash rounds
-	k := (m / float64(elements)) * math.Log(2)
-
-	// check parameters
-	if m <= 0 || k <= 0 {
-		return nil, errors.New("invalid parameters")
+	if elements <= 0 {
+		return nil, errElements
+	}
+	if falsePositive <= 0 || falsePositive >= 1 {
+		return nil, errFalsePositive
 	}
 
-	// ring parameters
+	r := Ring{}
+	// number of bits
+	m := (-1 * float64(elements) * math.Log(falsePositive)) / math.Pow(math.Log(2), 2)
+	// number of hash operations
+	k := (m / float64(elements)) * math.Log(2)
+
 	r.mutex = &sync.RWMutex{}
 	r.size = uint64(math.Ceil(m))
 	r.hash = uint64(math.Ceil(k))

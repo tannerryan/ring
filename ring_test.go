@@ -75,15 +75,27 @@ func BenchmarkTest(b *testing.B) {
 func TestBadParameters(t *testing.T) {
 	_, err := ring.Init(100, 1)
 	if err == nil {
-		t.Error("invalid parameters not captured")
+		t.Fatal("falsePositive >= 1 not captured")
 	}
-	_, err = ring.Init(0, 0.05)
+	_, err = ring.Init(100, 1.1)
 	if err == nil {
-		t.Error("invalid parameters not captured")
+		t.Fatal("falsePositive >= 1 not captured")
+	}
+	_, err = ring.Init(100, 0)
+	if err == nil {
+		t.Fatal("falsePositive <= 0 not captured")
+	}
+	_, err = ring.Init(100, -0.1)
+	if err == nil {
+		t.Fatal("falsePositive <= 0 not captured")
 	}
 	_, err = ring.Init(0, 0.1)
 	if err == nil {
-		t.Error("invalid parameters not captured")
+		t.Fatal("element <= 0 not captured")
+	}
+	_, err = ring.Init(-1, 0.1)
+	if err == nil {
+		t.Fatal("element <= 0 not captured")
 	}
 }
 

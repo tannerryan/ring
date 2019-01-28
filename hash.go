@@ -116,7 +116,7 @@ func murmur128(data []byte) (uint64, uint64) {
 // bytesToUint64 performs little endian conversion from a byte array to an
 // unsigned 64-bit int.
 func bytesToUint64(b []byte) uint64 {
-	_ = b[7] // safety
+	_ = b[7] // memory safety
 	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
 		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
 }
