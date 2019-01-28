@@ -22,6 +22,12 @@ type Ring struct {
 // elements, it accurately states if data is not added. Within a falsePositive
 // rate, it will indicate if the data has been added.
 func Init(elements int, falsePositive float64) (*Ring, error) {
+	if elements < 0 {
+		return nil, errors.New("elements must be greater than zero")
+	}
+	if falsePositive >= 1 || falsePositive < 0 {
+		return nil, errors.New("falsePositive should be between 0 and 1")
+	}
 	r := Ring{}
 	// length of filter
 	m := (-1 * float64(elements) * math.Log(falsePositive)) / math.Pow(math.Log(2), 2)
