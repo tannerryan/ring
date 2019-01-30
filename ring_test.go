@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/thetannerryan/ring"
 )
@@ -30,6 +31,7 @@ var (
 // TestMain performs unit tests and benchmarks.
 func TestMain(m *testing.M) {
 	// run tests
+	rand.Seed(time.Now().UTC().UnixNano())
 	ret := m.Run()
 
 	// print stats
@@ -123,7 +125,7 @@ func TestReset(t *testing.T) {
 func TestData(t *testing.T) {
 	var token []byte
 	// byte range of random data
-	min, max := 8, 4096
+	min, max := 8, 8192
 	for i := 0; i < tests; i++ {
 		// generate random data
 		size := rand.Intn(max-min) + min

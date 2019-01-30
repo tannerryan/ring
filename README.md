@@ -1,10 +1,10 @@
 # ring - high performance bloom filter
 [![Build
 Status](https://travis-ci.org/TheTannerRyan/ring.svg?branch=master)](https://travis-ci.org/TheTannerRyan/ring)
-[![Go Report
-Card](https://goreportcard.com/badge/github.com/thetannerryan/ring)](https://goreportcard.com/report/github.com/thetannerryan/ring)
 [![Coverage
 Status](https://coveralls.io/repos/github/TheTannerRyan/ring/badge.svg?branch=master)](https://coveralls.io/github/TheTannerRyan/ring?branch=master)
+[![Go Report
+Card](https://goreportcard.com/badge/github.com/thetannerryan/ring)](https://goreportcard.com/report/github.com/thetannerryan/ring)
 [![GoDoc](https://godoc.org/github.com/TheTannerRyan/ring?status.svg)](https://godoc.org/github.com/TheTannerRyan/ring)
 [![GitHub
 license](https://img.shields.io/github/license/thetannerryan/ring.svg)](https://github.com/TheTannerRyan/ring/blob/master/LICENSE)

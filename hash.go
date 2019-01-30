@@ -8,6 +8,11 @@ const (
 	// 128-bit MurmurHash3 constants
 	murmur64c1 uint64 = 0x87c37b91114253d5
 	murmur64c2 uint64 = 0x4cf5ad432745937f
+	murmur64c3 uint64 = 0x52dce729
+	murmur64c4 uint64 = 0x38495ab5
+	murmur64c5 uint64 = 0xff51afd7ed558ccd
+	murmur64c6 uint64 = 0xc4ceb9fe1a85ec53
+
 	// single byte
 	single byte = byte(1)
 )
@@ -21,20 +26,24 @@ func murmur128(data []byte) (uint64, uint64) {
 	for i := 0; i < blocks; i++ {
 		k1 = bytesToUint64(data[i*16:])
 		k2 = bytesToUint64(data[(i*16)+8:])
+
 		k1 *= murmur64c1
 		k1 = (k1 << 31) | (k1 >> (64 - 31))
 		k1 *= murmur64c2
 		h1 ^= k1
+
 		h1 = (h1 << 27) | (h1 >> (64 - 27))
 		h1 += h2
-		h1 = h1*5 + 0x52dce729
+		h1 = h1*5 + murmur64c3
+
 		k2 *= murmur64c2
 		k2 = (k2 << 33) | (k2 >> (64 - 33))
 		k2 *= murmur64c1
 		h2 ^= k2
+
 		h2 = (h2 << 31) | (h2 >> (64 - 31))
 		h2 += h1
-		h2 = h2*5 + 0x38495ab5
+		h2 = h2*5 + murmur64c4
 	}
 
 	tail := blocks * 16
@@ -64,6 +73,7 @@ func murmur128(data []byte) (uint64, uint64) {
 		k2 *= murmur64c1
 		h2 ^= k2
 		fallthrough
+
 	case 8:
 		k1 ^= uint64(data[tail+7]) << 56
 		fallthrough
@@ -95,22 +105,27 @@ func murmur128(data []byte) (uint64, uint64) {
 
 	h1 ^= uint64(length)
 	h2 ^= uint64(length)
+
 	h1 += h2
 	h2 += h1
-	h1 ^= h1 >> 33
-	h1 *= 0xff51afd7ed558ccd
-	h1 ^= h1 >> 33
-	h1 *= 0xc4ceb9fe1a85ec53
-	h1 ^= h1 >> 33
-	h2 ^= h2 >> 33
-	h2 *= 0xff51afd7ed558ccd
-	h2 ^= h2 >> 33
-	h2 *= 0xc4ceb9fe1a85ec53
-	h2 ^= h2 >> 33
+
+	h1 = fmix(h1)
+	h2 = fmix(h2)
+
 	h1 += h2
 	h2 += h1
 
 	return h1, h2
+}
+
+// fmix is the 64-bit MurmurHash3 finalizer to avalanche bits.
+func fmix(h uint64) uint64 {
+	h ^= h >> 33
+	h *= murmur64c5
+	h ^= h >> 33
+	h *= murmur64c6
+	h ^= h >> 33
+	return h
 }
 
 // bytesToUint64 performs little endian conversion from a byte array to an
