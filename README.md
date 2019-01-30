@@ -8,6 +8,8 @@ Card](https://goreportcard.com/badge/github.com/thetannerryan/ring)](https://gor
 [![GoDoc](https://godoc.org/github.com/TheTannerRyan/ring?status.svg)](https://godoc.org/github.com/TheTannerRyan/ring)
 [![GitHub
 license](https://img.shields.io/github/license/thetannerryan/ring.svg)](https://github.com/TheTannerRyan/ring/blob/master/LICENSE)
+[![Mentioned in Awesome
+Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 Package ring provides a high performance and thread safe Go implementation of a
 bloom filter.
