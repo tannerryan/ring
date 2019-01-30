@@ -51,24 +51,19 @@ func Init(elements int, falsePositive float64) (*Ring, error) {
 func (r *Ring) Add(data []byte) {
 	// generate hashes
 	hash := generateMultiHash(data)
-
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
 	for i := uint64(0); i < r.hash; i++ {
 		index := getRound(hash, i) % r.size
-		// set index%8-th bit to active
 		r.bits[index/8] |= (1 << (index % 8))
 	}
+	r.mutex.Unlock()
 }
 
 // Reset clears the ring.
 func (r *Ring) Reset() {
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	// reset bits
 	r.bits = make([]uint8, r.size/8+1)
+	r.mutex.Unlock()
 }
 
 // Test returns a bool if the data is in the ring. True indicates that the data
@@ -76,16 +71,15 @@ func (r *Ring) Reset() {
 func (r *Ring) Test(data []byte) bool {
 	// generate hashes
 	hash := generateMultiHash(data)
-
 	r.mutex.RLock()
-	defer r.mutex.RUnlock()
-
 	for i := uint64(0); i < uint64(r.hash); i++ {
 		index := getRound(hash, i) % r.size
 		// check if index%8-th bit is not active
 		if (r.bits[index/8] & (1 << (index % 8))) == 0 {
+			r.mutex.RUnlock()
 			return false
 		}
 	}
+	r.mutex.RUnlock()
 	return true
 }
