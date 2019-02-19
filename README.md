@@ -1,13 +1,13 @@
 # ring - high performance bloom filter
 [![Build
-Status](https://travis-ci.org/TheTannerRyan/ring.svg?branch=master)](https://travis-ci.org/TheTannerRyan/ring)
+Status](https://img.shields.io/travis/TheTannerRyan/ring.svg?style=flat-square)](https://travis-ci.org/TheTannerRyan/ring)
 [![Coverage
-Status](https://coveralls.io/repos/github/TheTannerRyan/ring/badge.svg?branch=master)](https://coveralls.io/github/TheTannerRyan/ring?branch=master)
+Status](https://img.shields.io/coveralls/github/TheTannerRyan/ring.svg?style=flat-square)](https://coveralls.io/github/TheTannerRyan/ring?branch=master)
 [![Go Report
-Card](https://goreportcard.com/badge/github.com/thetannerryan/ring)](https://goreportcard.com/report/github.com/thetannerryan/ring)
-[![GoDoc](https://godoc.org/github.com/TheTannerRyan/ring?status.svg)](https://godoc.org/github.com/TheTannerRyan/ring)
+Card](https://goreportcard.com/badge/github.com/thetannerryan/ring?style=flat-square)](https://goreportcard.com/report/github.com/thetannerryan/ring)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-5673AF.svg?style=flat-square)](https://godoc.org/github.com/TheTannerRyan/ring)
 [![GitHub
-license](https://img.shields.io/github/license/thetannerryan/ring.svg)](https://github.com/TheTannerRyan/ring/blob/master/LICENSE)
+license](https://img.shields.io/github/license/TheTannerRyan/ring.svg?style=flat-square)](https://github.com/TheTannerRyan/ring/blob/master/LICENSE)
 [![Mentioned in Awesome
 Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
