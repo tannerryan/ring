@@ -6,4 +6,7 @@ coverage:
 	go tool cover -func=count.out
 	rm count.out
 
+codecov:
+	./go.test.sh
+
 .SILENT:

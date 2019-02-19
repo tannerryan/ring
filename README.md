@@ -1,8 +1,7 @@
 # ring - high performance bloom filter
 [![Build
 Status](https://img.shields.io/travis/TheTannerRyan/ring.svg?style=flat-square)](https://travis-ci.org/TheTannerRyan/ring)
-[![Coverage
-Status](https://img.shields.io/coveralls/github/TheTannerRyan/ring.svg?style=flat-square)](https://coveralls.io/github/TheTannerRyan/ring?branch=master)
+[![codecov](https://img.shields.io/codecov/c/github/TheTannerRyan/ring.svg?style=flat-square)](https://codecov.io/gh/TheTannerRyan/ring)
 [![Go Report
 Card](https://goreportcard.com/badge/github.com/thetannerryan/ring?style=flat-square)](https://goreportcard.com/report/github.com/thetannerryan/ring)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-5673AF.svg?style=flat-square)](https://godoc.org/github.com/TheTannerRyan/ring)

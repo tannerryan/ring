@@ -5,9 +5,9 @@ go:
 
 go_import_path: github.com/thetannerryan/ring
 
-before_install:
-  - go get github.com/mattn/goveralls
-
 script:
   - make
-  - $GOPATH/bin/goveralls -service=travis-ci
+  - make codecov
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
