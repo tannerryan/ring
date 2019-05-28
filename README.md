@@ -26,17 +26,23 @@ the target.
 === RUN   TestBadParameters
 --- PASS: TestBadParameters (0.00s)
 === RUN   TestReset
---- PASS: TestReset (0.30s)
+--- PASS: TestReset (0.26s)
 === RUN   TestData
---- PASS: TestData (17.27s)
+--- PASS: TestData (14.07s)
+=== RUN   TestMerge
+--- PASS: TestMerge (13.78s)
+=== RUN   TestMarshal
+--- PASS: TestMarshal (14.48s)
 PASS
 >> Number of elements:  1000000
 >> Target false positive rate:  0.001000
->> Number of false positives:  137
->> Actual false positive rate:  0.000137
->> Benchmark Add():   5000000          257 ns/op
->> Benchmark Test():  10000000         175 ns/op
-ok      command-line-arguments  21.089s
+>> Number of false positives:  99
+>> Actual false positive rate:  0.000099
+>> Number of false negatives:  0
+>> Actual false negative rate:  0.000000
+>> Benchmark Add():  10000000          158 ns/op
+>> Benchmark Test():  10000000         173 ns/op
+ok      command-line-arguments  47.914s
 ```
 
 ## License

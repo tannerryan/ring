@@ -5,7 +5,9 @@
 package ring
 
 import (
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 )
@@ -72,14 +74,66 @@ func (r *Ring) Test(data []byte) bool {
 	// generate hashes
 	hash := generateMultiHash(data)
 	r.mutex.RLock()
+	defer r.mutex.RUnlock()
 	for i := uint64(0); i < uint64(r.hash); i++ {
 		index := getRound(hash, i) % r.size
 		// check if index%8-th bit is not active
 		if (r.bits[index/8] & (1 << (index % 8))) == 0 {
-			r.mutex.RUnlock()
 			return false
 		}
 	}
-	r.mutex.RUnlock()
 	return true
+}
+
+// Merges the sent Ring into itself.
+func (r *Ring) Merge(m *Ring) error {
+	if r.size != m.size || r.hash != m.hash {
+		return errors.New("rings must have the same m/k parameters")
+	}
+
+	r.mutex.Lock()
+	m.mutex.RLock()
+	for i := 0; i < len(m.bits); i++ {
+		r.bits[i] |= m.bits[i]
+	}
+	r.mutex.Unlock()
+	m.mutex.RUnlock()
+	return nil
+}
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface.
+func (r *Ring) MarshalBinary() ([]byte, error) {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	out := make([]byte, len(r.bits)+17)
+	// store a version for future compatibility
+	out[0] = 1
+	binary.BigEndian.PutUint64(out[1:9], r.size)
+	binary.BigEndian.PutUint64(out[9:17], r.hash)
+	copy(out[17:], r.bits)
+	return out, nil
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
+func (r *Ring) UnmarshalBinary(data []byte) error {
+	// 17 bytes for version + size + hash and 1 byte at least for bits
+	if len(data) < 17+1 {
+		return fmt.Errorf("incorrect length: %d", len(data))
+	}
+	if data[0] != 1 {
+		return fmt.Errorf("unexpected version: %d", data[0])
+	}
+	if r.mutex == nil {
+		r.mutex = new(sync.RWMutex)
+	}
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	r.size = binary.BigEndian.Uint64(data[1:9])
+	r.hash = binary.BigEndian.Uint64(data[9:17])
+	// sanity check against the bits being the wrong size
+	if len(r.bits) != int(r.size/8+1) {
+		r.bits = make([]uint8, r.size/8+1)
+	}
+	copy(r.bits, data[17:])
+	return nil
 }
