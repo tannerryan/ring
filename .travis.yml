@@ -1,9 +1,10 @@
 language: go
 
 go:
-  - "1.x"
+  - "1.12.x"
 
-go_import_path: github.com/thetannerryan/ring
+env:
+  - GO111MODULE=on
 
 script:
   - make
@@ -11,3 +12,5 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+install: true

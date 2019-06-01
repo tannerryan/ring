@@ -1,5 +1,5 @@
 test:
-	go test -v ring_test.go
+	go test -v ./...
 
 coverage:
 	go test -covermode=count -coverprofile=count.out ./...
