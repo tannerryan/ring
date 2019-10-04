@@ -139,7 +139,7 @@ func bytesToUint64(b []byte) uint64 {
 // generateMultihash returns 4 64-bit (2 x 128-bit) MurmurHash3 hashes.
 func generateMultiHash(data []byte) [4]uint64 {
 	h1, h2 := murmur128(data)
-	h3, h4 := murmur128(append(data, single))
+	h3, h4 := murmur128(append([]byte{single}, data...))
 	return [4]uint64{h1, h2, h3, h4}
 }
 
