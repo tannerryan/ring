@@ -67,7 +67,7 @@ func BenchmarkAdd(b *testing.B) {
 	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
 		intToByte(buff, i)
-		rBench.Add(buff[:3])
+		rBench.Add(buff)
 	}
 }
 
@@ -76,7 +76,7 @@ func BenchmarkTest(b *testing.B) {
 	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
 		intToByte(buff, i)
-		rBench.Test(buff[:3])
+		rBench.Test(buff)
 	}
 }
 
