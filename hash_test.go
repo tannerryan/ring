@@ -3,7 +3,6 @@ package ring
 import "testing"
 
 func BenchmarkGenerateMultiHash(b *testing.B) {
-	b.ReportAllocs()
 	data := []byte{0x00, 0x12, 0x34, 0x56, 0x78, 0x00}
 	buff := make([]byte, len(data))
 	for i := 0; i < b.N; i++ {

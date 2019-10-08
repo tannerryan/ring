@@ -64,7 +64,6 @@ func TestMain(m *testing.M) {
 
 // BenchmarkAdd tests adding elements to a Ring.
 func BenchmarkAdd(b *testing.B) {
-	b.ReportAllocs()
 	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
 		intToByte(buff, i)
@@ -74,7 +73,6 @@ func BenchmarkAdd(b *testing.B) {
 
 // BenchmarkTest tests elements in a Ring.
 func BenchmarkTest(b *testing.B) {
-	b.ReportAllocs()
 	buff := make([]byte, 4)
 	for i := 0; i < b.N; i++ {
 		intToByte(buff, i)
