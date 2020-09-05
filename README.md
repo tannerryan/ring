@@ -4,7 +4,7 @@ Status](https://img.shields.io/travis/tannerryan/ring.svg?style=flat-square)](ht
 [![codecov](https://img.shields.io/codecov/c/github/tannerryan/ring.svg?style=flat-square)](https://codecov.io/gh/tannerryan/ring)
 [![Go Report
 Card](https://goreportcard.com/badge/github.com/tannerryan/ring?style=flat-square)](https://goreportcard.com/report/github.com/tannerryan/ring)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-5673AF.svg?style=flat-square)](https://godoc.org/github.com/tannerryan/ring)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/tannerryan/ring?tab=doc)](https://pkg.go.dev/github.com/tannerryan/ring?tab=doc)
 [![GitHub
 license](https://img.shields.io/github/license/tannerryan/ring.svg?style=flat-square)](https://github.com/tannerryan/ring/blob/master/LICENSE)
 [![Mentioned in Awesome
