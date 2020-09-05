@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thetannerryan/ring"
+	"github.com/tannerryan/ring"
 )
 
 const (

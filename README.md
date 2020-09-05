@@ -1,12 +1,12 @@
 # ring - high performance bloom filter
 [![Build
-Status](https://img.shields.io/travis/TheTannerRyan/ring.svg?style=flat-square)](https://travis-ci.org/TheTannerRyan/ring)
-[![codecov](https://img.shields.io/codecov/c/github/TheTannerRyan/ring.svg?style=flat-square)](https://codecov.io/gh/TheTannerRyan/ring)
+Status](https://img.shields.io/travis/tannerryan/ring.svg?style=flat-square)](https://travis-ci.org/tannerryan/ring)
+[![codecov](https://img.shields.io/codecov/c/github/tannerryan/ring.svg?style=flat-square)](https://codecov.io/gh/tannerryan/ring)
 [![Go Report
-Card](https://goreportcard.com/badge/github.com/thetannerryan/ring?style=flat-square)](https://goreportcard.com/report/github.com/thetannerryan/ring)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-5673AF.svg?style=flat-square)](https://godoc.org/github.com/TheTannerRyan/ring)
+Card](https://goreportcard.com/badge/github.com/tannerryan/ring?style=flat-square)](https://goreportcard.com/report/github.com/tannerryan/ring)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-5673AF.svg?style=flat-square)](https://godoc.org/github.com/tannerryan/ring)
 [![GitHub
-license](https://img.shields.io/github/license/TheTannerRyan/ring.svg?style=flat-square)](https://github.com/TheTannerRyan/ring/blob/master/LICENSE)
+license](https://img.shields.io/github/license/tannerryan/ring.svg?style=flat-square)](https://github.com/tannerryan/ring/blob/master/LICENSE)
 [![Mentioned in Awesome
 Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)
 
@@ -14,7 +14,7 @@ Package ring provides a high performance and thread safe Go implementation of a
 bloom filter.
 
 ## Usage
-Please see the [godoc](https://godoc.org/github.com/TheTannerRyan/ring) for
+Please see the [godoc](https://godoc.org/github.com/tannerryan/ring) for
 usage.
 
 ## Accuracy

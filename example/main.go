@@ -7,7 +7,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/thetannerryan/ring"
+	"github.com/tannerryan/ring"
 )
 
 func main() {
