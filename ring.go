@@ -15,6 +15,7 @@ import (
 var (
 	errElements      = errors.New("error: elements must be greater than 0")
 	errFalsePositive = errors.New("error: falsePositive must be greater than 0 and less than 1")
+	errHash          = errors.New("error: Hash functions must be greater than zero")
 )
 
 // Ring contains the information for a ring data store.
@@ -45,6 +46,25 @@ func Init(elements int, falsePositive float64) (*Ring, error) {
 	r.mutex = &sync.RWMutex{}
 	r.size = uint64(math.Ceil(m))
 	r.hash = uint64(math.Ceil(k))
+	r.bits = make([]uint8, r.size/8+1)
+	return &r, nil
+}
+
+// InitByParameters initializes a bloom filter allowing the user to explicitly set
+// the size of the bit array and the amount of hash functions
+func InitByParameters(size, hashFunctions uint64) (*Ring, error) {
+	if size <= 0 {
+		return nil, errElements
+	}
+	if hashFunctions <= 0 {
+		return nil, errHash
+	}
+
+	r := Ring{}
+
+	r.mutex = &sync.RWMutex{}
+	r.size = size
+	r.hash = hashFunctions
 	r.bits = make([]uint8, r.size/8+1)
 	return &r, nil
 }
