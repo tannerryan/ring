@@ -1,6 +1,5 @@
-// Copyright (c) 2019 Tanner Ryan. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// Copyright (c) 2019 Tanner Ryan. All rights reserved. Use of this source code
+// is governed by a BSD-style license that can be found in the LICENSE file.
 
 package ring
 
@@ -12,72 +11,96 @@ import (
 	"sync"
 )
 
-var (
-	errElements      = errors.New("error: elements must be greater than 0")
-	errFalsePositive = errors.New("error: falsePositive must be greater than 0 and less than 1")
+const (
+	// legacyBinaryVersion identifies filters made with the original hash.
+	legacyBinaryVersion byte = 1
+	// binaryVersion identifies filters made with the corrected hash.
+	binaryVersion byte = 2
+	// binaryHeaderSize is the version, size, and hash-round header length.
+	binaryHeaderSize = 17
 )
 
-// Ring contains the information for a ring data store.
+var (
+	// errElements reports an invalid expected element count.
+	errElements = errors.New("error: elements must be greater than 0")
+	// errFalsePositive reports an invalid false-positive rate.
+	errFalsePositive = errors.New("error: falsePositive must be greater than 0 and less than 1")
+	// errInvalidRing reports an uninitialized or corrupt ring.
+	errInvalidRing = errors.New("ring is not initialized or is invalid")
+	// errIncompatibleRings reports filters with different parameters.
+	errIncompatibleRings = errors.New("rings must have the same m/k parameters")
+	// errIncompatibleVersions reports filters with different hash behavior.
+	errIncompatibleVersions = errors.New("rings must have the same binary version")
+)
+
+// Ring is a thread-safe Bloom filter. A Ring must be created with Init or
+// decoded with UnmarshalBinary before use. Ring values should not be copied.
 type Ring struct {
-	size  uint64        // number of bits (bit array is size/8+1)
-	bits  []uint8       // main bit array
-	hash  uint64        // number of hash rounds
-	mutex *sync.RWMutex // mutex for locking Add, Test, and Reset operations
+	// version selects the binary format and hash behavior.
+	version byte
+	// size is the number of usable bits.
+	size uint64
+	// bits stores the filter bits.
+	bits []byte
+	// hash is the number of hash rounds.
+	hash uint64
+	// mutex protects the filter fields.
+	mutex *sync.RWMutex
 }
 
-// Init initializes and returns a new ring, or an error. Given a number of
-// elements, it accurately states if data is not added. Within a falsePositive
-// rate, it will indicate if the data has been added.
+// Init returns a filter sized for a positive element count and a false-positive
+// rate between 0 and 1.
 func Init(elements int, falsePositive float64) (*Ring, error) {
 	if elements <= 0 {
 		return nil, errElements
 	}
-	if falsePositive <= 0 || falsePositive >= 1 {
+	if math.IsNaN(falsePositive) || falsePositive <= 0 || falsePositive >= 1 {
 		return nil, errFalsePositive
 	}
 
-	r := Ring{}
-	// number of bits
-	m := (-1 * float64(elements) * math.Log(falsePositive)) / math.Pow(math.Log(2), 2)
-	// number of hash operations
-	k := (m / float64(elements)) * math.Log(2)
-
-	r.mutex = &sync.RWMutex{}
-	r.size = uint64(math.Ceil(m))
-	r.hash = uint64(math.Ceil(k))
-	r.bits = make([]uint8, r.size/8+1)
-	return &r, nil
+	// Calculate the number of bits and hash rounds using the standard Bloom
+	// filter estimates.
+	m := (-1 * float64(elements) * math.Log(falsePositive)) / (math.Ln2 * math.Ln2)
+	if math.IsInf(m, 0) || m >= float64(math.MaxUint64) {
+		return nil, errors.New("ring size is too large")
+	}
+	size := uint64(math.Ceil(m))
+	hash := uint64(math.Ceil((float64(size) / float64(elements)) * math.Ln2))
+	return newRing(size, hash)
 }
 
-// Add adds the data to the ring.
+// InitByParameters returns a filter with the given bit count and hash rounds.
+// Both values must be positive, and hashes cannot exceed size.
+func InitByParameters(size, hashes uint64) (*Ring, error) {
+	return newRing(size, hashes)
+}
+
+// Add records data in the filter.
 func (r *Ring) Add(data []byte) {
-	// generate hashes
-	hash := generateMultiHash(data)
 	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	hash := generateMultiHash(data, r.version)
 	for i := uint64(0); i < r.hash; i++ {
 		index := getRound(hash, i) % r.size
 		r.bits[index/8] |= (1 << (index % 8))
 	}
-	r.mutex.Unlock()
 }
 
 // Reset clears the ring.
 func (r *Ring) Reset() {
 	r.mutex.Lock()
-	r.bits = make([]uint8, r.size/8+1)
-	r.mutex.Unlock()
+	defer r.mutex.Unlock()
+	clear(r.bits)
 }
 
-// Test returns a bool if the data is in the ring. True indicates that the data
-// may be in the ring, while false indicates that the data is not in the ring.
+// Test reports whether data may be in the filter. A false result rules out
+// membership.
 func (r *Ring) Test(data []byte) bool {
-	// generate hashes
-	hash := generateMultiHash(data)
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	for i := uint64(0); i < uint64(r.hash); i++ {
+	hash := generateMultiHash(data, r.version)
+	for i := uint64(0); i < r.hash; i++ {
 		index := getRound(hash, i) % r.size
-		// check if index%8-th bit is not active
 		if (r.bits[index/8] & (1 << (index % 8))) == 0 {
 			return false
 		}
@@ -85,55 +108,116 @@ func (r *Ring) Test(data []byte) bool {
 	return true
 }
 
-// Merges the sent Ring into itself.
+// Merge adds another filter with the same parameters and binary version to r.
 func (r *Ring) Merge(m *Ring) error {
-	if r.size != m.size || r.hash != m.hash {
-		return errors.New("rings must have the same m/k parameters")
+	if r == nil || m == nil || r.mutex == nil || m.mutex == nil {
+		return errInvalidRing
+	}
+	if r == m {
+		return nil
 	}
 
-	r.mutex.Lock()
 	m.mutex.RLock()
-	for i := 0; i < len(m.bits); i++ {
-		r.bits[i] |= m.bits[i]
-	}
-	r.mutex.Unlock()
+	version, size, hash := m.version, m.size, m.hash
+	bits := append([]byte(nil), m.bits...)
 	m.mutex.RUnlock()
+
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	if r.version != version {
+		return errIncompatibleVersions
+	}
+	if r.size != size || r.hash != hash || len(r.bits) != len(bits) {
+		return errIncompatibleRings
+	}
+	for i := range bits {
+		r.bits[i] |= bits[i]
+	}
 	return nil
 }
 
-// MarshalBinary implements the encoding.BinaryMarshaler interface.
+// MarshalBinary encodes the filter. New filters use format version 2.
 func (r *Ring) MarshalBinary() ([]byte, error) {
+	if r == nil || r.mutex == nil {
+		return nil, errInvalidRing
+	}
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	out := make([]byte, len(r.bits)+17)
-	// store a version for future compatibility
-	out[0] = 1
+	length, err := bitBytes(r.size)
+	if err != nil || !validBinaryVersion(r.version) || r.hash == 0 || r.hash > r.size || len(r.bits) != length {
+		return nil, errInvalidRing
+	}
+	out := make([]byte, len(r.bits)+binaryHeaderSize)
+	out[0] = r.version
 	binary.BigEndian.PutUint64(out[1:9], r.size)
-	binary.BigEndian.PutUint64(out[9:17], r.hash)
-	copy(out[17:], r.bits)
+	binary.BigEndian.PutUint64(out[9:binaryHeaderSize], r.hash)
+	copy(out[binaryHeaderSize:], r.bits)
 	return out, nil
 }
 
-// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
+// UnmarshalBinary replaces the filter with a valid version 1 or 2 encoding.
 func (r *Ring) UnmarshalBinary(data []byte) error {
-	// 17 bytes for version + size + hash and 1 byte at least for bits
-	if len(data) < 17+1 {
+	if r == nil {
+		return errInvalidRing
+	}
+	if len(data) < binaryHeaderSize+1 {
 		return fmt.Errorf("incorrect length: %d", len(data))
 	}
-	if data[0] != 1 {
+	if !validBinaryVersion(data[0]) {
 		return fmt.Errorf("unexpected version: %d", data[0])
 	}
+	size := binary.BigEndian.Uint64(data[1:9])
+	hash := binary.BigEndian.Uint64(data[9:binaryHeaderSize])
+	length, err := bitBytes(size)
+	if err != nil || hash == 0 || hash > size {
+		return errors.New("invalid ring parameters")
+	}
+	if len(data) != binaryHeaderSize+length {
+		return fmt.Errorf("incorrect length: %d", len(data))
+	}
+	bits := append([]byte(nil), data[binaryHeaderSize:]...)
+
 	if r.mutex == nil {
 		r.mutex = new(sync.RWMutex)
 	}
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	r.size = binary.BigEndian.Uint64(data[1:9])
-	r.hash = binary.BigEndian.Uint64(data[9:17])
-	// sanity check against the bits being the wrong size
-	if len(r.bits) != int(r.size/8+1) {
-		r.bits = make([]uint8, r.size/8+1)
-	}
-	copy(r.bits, data[17:])
+	r.version = data[0]
+	r.size = size
+	r.hash = hash
+	r.bits = bits
 	return nil
+}
+
+// newRing creates a filter from validated parameters.
+func newRing(size, hash uint64) (*Ring, error) {
+	length, err := bitBytes(size)
+	if err != nil || hash == 0 || hash > size {
+		return nil, errors.New("invalid ring parameters")
+	}
+	return &Ring{
+		version: binaryVersion,
+		size:    size,
+		bits:    make([]byte, length),
+		hash:    hash,
+		mutex:   new(sync.RWMutex),
+	}, nil
+}
+
+// validBinaryVersion reports whether a format version is supported.
+func validBinaryVersion(version byte) bool {
+	return version == legacyBinaryVersion || version == binaryVersion
+}
+
+// bitBytes returns the byte length used by the binary format.
+func bitBytes(size uint64) (int, error) {
+	if size == 0 {
+		return 0, errors.New("ring size must be greater than 0")
+	}
+	length := size/8 + 1
+	maxInt := uint64(math.MaxInt)
+	if length > maxInt-binaryHeaderSize {
+		return 0, errors.New("ring size is too large")
+	}
+	return int(length), nil
 }

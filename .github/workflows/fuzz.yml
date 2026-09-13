@@ -1,0 +1,28 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      fuzz_time:
+        description: Fuzzing time
+        required: false
+        default: 1m
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          check-latest: true
+      - name: Run fuzzer
+        env:
+          FUZZ_TIME: ${{ inputs.fuzz_time || '1m' }}
+        run: make fuzz
